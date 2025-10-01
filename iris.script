@@ -1,0 +1,9 @@
+set $namespace="%SYS"
+Do ##class(Security.Users).UnExpireUserPasswords("*")
+Do ##class(Config.NLS.Locales).Install("jpuw")
+
+set $namespace="USER"
+// インストールユーティリティクラスインポート
+do $System.OBJ.LoadDir("/opt/src/FS","ck",,1)
+// テーブル作成
+do ##class(FS.InstallUtils).loadsql("/opt/src/sample.sql")
