@@ -12,6 +12,7 @@ def initial():
     if conn is None:
         conn = engine.connect()
 
+
 #インポート時に初期化
 initial()
 
@@ -31,6 +32,21 @@ def jsonToDB(input):
     for reco in input:
         para={"chatrole":reco["role"],"content":reco["content"],"logdate":formatted_dt}
         rset = conn.execute(text(sql),para)
+
+def search(input):
+    sql=(
+     "select TOP 5 VECTOR_DOT_PRODUCT(TextVec,TO_VECTOR(FS.GetTextVec(:text),FLOAT,1536)) as sim ,FileName,Title,Text"
+     " FROM FS.Document ORDER BY sim DESC"
+    )
+    print(sql)
+    rset = conn.execute(text(sql), {'text': input}).fetchall()
+    docref=[]
+    for reco in rset:
+        #print(reco)
+        docref.append(
+            {"FileName":reco[1],"Title":reco[2],"Doc":reco[3]}
+        )
+    return docref
 
 # インポート時にだけ実行したい場合は、関数の呼び出し方を工夫する
 if __name__ == "__main__":

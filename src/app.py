@@ -12,7 +12,16 @@ client = OpenAI()  # 環境変数 OPENAI_API_KEY を利用
 # 会話履歴（継続会話の肝）
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role":"system","content":"あなたは親切なアシスタントです。"}
+        {
+            "role":"system",
+            "content":"""
+                あなたは親切なアシスタントです。
+                ユーザの質問に類似する社内情報をsourcetext以下に記載します。
+                また社内ファイルを sourceinfo以下に記載します。
+                ユーザが希望する内容を社内文書sourceinfoの記載に沿って回答してください。
+                回答のサマリも作成してください。社内文書のどの情報を使用したかtitleの内容を含めてください。
+            """
+        }
     ]
 
 # 画面に履歴を表示
@@ -27,6 +36,35 @@ if prompt := st.chat_input("メッセージを入力..."):
     with st.chat_message("user"):
         st.markdown(prompt)
 
+    #IRISにベクトル検索
+    vresult=tryiris.search(prompt)
+    #print(vresult)
+    
+    with st.expander("🔍 ベクトル検索の結果：デバッグ"):
+        st.write(vresult)
+    if not vresult:
+        # 見つからないときのフォールバック
+        st.warning("ベクトル検索で関連ドキュメントが見つかりませんでした。")
+        sourceinfo = ""
+        sourcetext = ""
+    
+    sourcetext=""
+    for item in vresult:
+        sourcetext+="title="+ item["Title"]+ ",info=" +item["Doc"]+ ", sourcefile="+ item["FileName"] +"\n"
+    
+    st.session_state.messages.append(
+            {"role":"system","content":f"""
+  
+                \"\"\"
+                sourcetext:
+                \"\"\"
+                {sourcetext}
+                \"\"\"
+                            
+            """
+            }
+        )
+    print(sourcetext)
     # 応答生成（モデル名はお好みで）
     resp = client.chat.completions.create(
         model="gpt-4o-mini",
