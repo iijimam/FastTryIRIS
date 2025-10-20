@@ -1,9 +1,12 @@
 import requests
 import json
+from tqdm import tqdm
+import os
+
 
 def getEmbed(input):
     # APIキーの設定
-    api_key = ""
+    api_key = os.getenv('OPENAI_API_KEY')
 
     # リクエストURL
     url = "https://api.openai.com/v1/embeddings"
@@ -34,3 +37,25 @@ def getEmbed(input):
         print(response.text)
     
     return embeddingstr
+
+
+
+def addVector(infile,outfile):
+    with open(infile, "r", encoding="utf-8") as f:
+        originaldocs = [json.loads(line) for line in f]
+
+    #print(originaldocs[:2])
+
+    openai_text_embeddings = []
+
+    for doc in tqdm(originaldocs, desc="Encoding text with OpenAI"):
+        openai_text_embeddings.append(getEmbed(doc["text"]))
+
+    openai_text_vectors = [
+        {"source": doc["source"], "title":doc["title"],"text":doc["text"],"textvec": embedding}
+        for doc, embedding in zip(originaldocs, openai_text_embeddings)
+    ]
+
+    with open(outfile, "w", encoding="utf-8") as f:
+        for item in openai_text_vectors:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")

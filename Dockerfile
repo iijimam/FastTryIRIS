@@ -9,6 +9,7 @@ USER ${ISC_PACKAGE_MGRUSER}
 # ビルド中に実行したいスクリプトがあるファイルをコンテナにコピーしています
 COPY iris.script .
 COPY src .
+COPY data data
 #COPY iris.key ${ISC_PACKAGE_INSTALLDIR}/mgr/iris.key
 
 # IRISを開始し、IRISにログインし、iris.scriptに記載のコマンドを実行しています
