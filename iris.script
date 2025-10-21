@@ -19,6 +19,6 @@ do ##class(FS.InstallUtils).loadsql("/opt/src/sample.sql")
 // データロード前にカレントプロセスだけジャーナルOff
 do DISABLE^%SYS.NOJRN
 // データロード
-do ##class(FS.InstallUtils).loadvectorjsonl("/opt/src/data/mhlw_chapters_vector.jsonl")
+do ##class(FS.InstallUtils).loadvectorjsonl("/opt/src/data/mhlw_hr_rules_chunk_embeddings.jsonl",1)
 // データロード後にカレントプロセスのジャーナルOn
 do ENABLE^%SYS.NOJRN

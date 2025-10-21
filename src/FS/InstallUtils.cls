@@ -32,7 +32,8 @@ ClassMethod GetTextVec(input As %String(MAXLEN=100000)) As %String [ SqlName = G
 }
 
 /// VECTOR型の方：ファイルにEmbeddingが入ってるファイルを使うINSERT
-ClassMethod loadvectorjsonl(file As %String) [ Language = python, SqlProc ]
+/// listflg : Embedingがlistの場合に1、文字の場合に0
+ClassMethod loadvectorjsonl(file As %String, listflg As %Integer) [ Language = python, SqlProc ]
 {
     import iris
     import irisbuiltins
@@ -45,12 +46,18 @@ ClassMethod loadvectorjsonl(file As %String) [ Language = python, SqlProc ]
         with open(file, "r", encoding="utf-8") as f:
             docs = [json.loads(line) for line in f]
         
-        sql="insert into FS.Document (FileName,Title,Text,TextVec) Values(?,?,?,TO_VECTOR(?,Float,1536))"
+        sql="insert into FS.Document (Source,Title,Text,NumOfToken,TextVec) Values(?,?,?,?,TO_VECTOR(?,Float,1536))"
         stmt=iris.sql.prepare(sql)
-        for item in docs:
-            #print(item["text"])
-            rs=stmt.execute(item["source"],item["title"],item["text"],item["textvec"])
-    
+        if listflg==1:
+            for item in docs:
+                embeddingstr=str(item["embedding"])
+                #print(embeddingstr[1:-1])
+                rs=stmt.execute(item["id"],item["title"],item["text"],item["n_tokens"],embeddingstr[1:-1])
+        else:
+            for item in docs:
+                #print(item["text"])
+                rs=stmt.execute(item["id"],item["title"],item["text"],item["n_tokens"],item["embedding"])
+
     except irisbuiltins.SQLError as ex:
         print(str(repr(ex)))
         print(item["title"])
